@@ -72,8 +72,8 @@ Other than the listed functionalities, available functions are
 Other Important Information
 ===========================
 
-* The shown example bash commands are mainly focused on windows terminal but the scripts do run other os environments
-where python can run on
+* The shown example bash commands are mainly focused on windows terminal but the scripts do run other os environments where 
+python can run on
 
 * The available binary file is an exe file hence can be only can run on windows os
 
