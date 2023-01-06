@@ -16,6 +16,7 @@ previous releases or using git clone command in terminal as follows
 
     git clone https://github.com/TodoLodo/Passwords.git
 
+
 Usage
 =====
 
