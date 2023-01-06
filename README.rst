@@ -65,7 +65,8 @@ username, modify saved passwords, delete save passwords and search up passwords 
 All available options will be listed on terminal upon initiation of the script/application
 
 Other than the listed functionalities, available functions are
-* clearing all password records which simply can be achieved by typing ca or clearall when selecting options
+
+* clearing all password records which simply can be achieved by typing "ca" or "clearall" when selecting options
 
 ===========================
 Other Important Information
