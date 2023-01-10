@@ -1,5 +1,4 @@
 import string
-import random
 import pyperclip
 import sqlite3
 import os
@@ -14,6 +13,7 @@ __author__ = "Todo Lodo"
 class Main:
     def __init__(self):
         self.chars = list(string.ascii_letters + string.digits + string.punctuation)
+        print(rf"{os.path.dirname(__file__) if __file__.endswith('.exe') else os.path.dirname(os.path.dirname(__file__))}\data\passwords.db", os.path.abspath(__file__))
         self.conn = sqlite3.connect(rf"{os.path.dirname(__file__) if __file__.endswith('.exe') else os.path.dirname(os.path.dirname(__file__))}\data\passwords.db")
         self.curs = self.conn.cursor()
 
@@ -169,7 +169,6 @@ class Main:
                             self.conn.commit()
                             print("\n\x1b[1;34mPassword modified successfully!\x1b[0m")
                         break
-
                     elif command == '0':
                         self.Exit()
                     elif command == '-1':
@@ -178,7 +177,6 @@ class Main:
                         raise ValueError
                 except ValueError:
                     self.invalidOption(command)
-
         else:
             print("\n\x1b[1;34mNo Records to Modify!")
 
@@ -220,35 +218,29 @@ class Main:
                     h2max = len("Username")
                     h3max = len("Password")
                     data = self.curs.execute("select * from passwords").fetchall()
-                    i = 1
-                    for row in data:
+
+                    for i, row in enumerate(data):
                         h0max = len(str(i)) if len(str(i)) > h0max else h0max
                         h1max = len(row[0]) if len(row[0]) > h1max else h1max
                         h2max = len(row[1]) if len(row[1]) > h2max else h2max
                         h3max = len(row[2]) if len(row[2]) > h3max else h3max
-                        i += 1
 
                     print(
                         f"\n \x1b[1;32m#{' ' * (h0max - len('#'))} \x1b[1;35m| \x1b[1;34mReference{' ' * (h1max - len('Reference'))} \x1b[1;35m| \x1b[1;34mUsername{' ' * (h2max - len('Username'))} \x1b[1;35m| \x1b[1;34mPassword{' ' * (h3max - len('Password'))}")
                     print(f"\x1b[1;35m-{'-' * h0max}-+-{'-' * h1max}-+-{'-' * h2max}-+-{'-' * h3max}")
-                    i = 1
-                    for row in data:
+
+                    for i, row in enumerate(data):
                         print(
                             f" \x1b[{'1;32;41' if i in rowIndexes else '1;32'}m{str(i) + ' ' * (h0max - len(str(i)))}\x1b[0m \x1b[1;35m| \x1b[{'0;31' if i in rowIndexes else '0'}m{row[0] + ' ' * (h1max - len(row[0]))} \x1b[1;35m| \x1b[{'0;31' if i in rowIndexes else '0'}m{row[1] + ' ' * (h2max - len(row[1]))} \x1b[1;35m| \x1b[{'0;31' if i in rowIndexes else '0'}m{row[2] + ' ' * (h3max - len(row[2]))}")
-                        i += 1
 
                     command = input("\n\x1b[0;33mConfirm selection for deletion?(y/N): \x1b[1;32m")
 
                     if command.lower() == 'y':
-                        n = 0
-                        print(rowIndexes)
-                        for i in rowIndexes:
+                        for n, i in enumerate(rowIndexes):
                             i -= n
                             rowid = self.curs.execute(f"SELECT rowid FROM passwords LIMIT 1 OFFSET {i-1}").fetchone()[0]
                             self.curs.execute(f"delete from passwords where rowid = {rowid}")
                             self.conn.commit()
-
-                            n += 1
 
                         print("\n\x1b[1;34mPassword(s) deleted successfully!\x1b[0m")
 
@@ -282,48 +274,34 @@ class Main:
 
             data = self.curs.execute("select * from passwords").fetchall()
 
-            i = 1
-            for row in data:
+            for i, row in enumerate(data):
                 h1max = len(row[0]) if len(row[0]) > h1max else h1max
                 h2max = len(row[1]) if len(row[1]) > h2max else h2max
                 h3max = len(row[2]) if len(row[2]) > h3max else h3max
-                i += 1
 
             print(f"\n \x1b[1;34m#{' ' * (h0max - len('#'))} \x1b[1;35m| \x1b[1;34mReference{' ' * (h1max - len('Reference'))} \x1b[1;35m| \x1b[1;34mUsername{' ' * (h2max - len('Username'))} \x1b[1;35m| \x1b[1;34mPassword{' ' * (h3max - len('Password'))}")
             print(f"\x1b[1;35m-{'-' * h0max}-+-{'-' * h1max}-+-{'-' * h2max}-+-{'-' * h3max}")
 
-            i = 1
-            for row in data:
+            for i, row in enumerate(data):
                 if key in row[0].lower() or key in row[1].lower() or key in row[2].lower():
                     indexes = [[], [], []]
-                    #print(f" \x1b[1;32m{str(i) + ' ' * (h0max - len(str(i)))} \x1b[1;35m| \x1b[0m{row[0] + ' ' * (h1max - len(row[0]))} \x1b[1;35m| \x1b[0m{row[1] + ' ' * (h2max - len(row[1]))} \x1b[1;35m| \x1b[0m{row[2] + ' ' * (h3max - len(row[2]))}")
-                    ii = 0
-
-                    for c in row:
+                    for ii, c in enumerate(row):
                         n = 0
                         sc = c.lower()
-
                         try:
                             while True:
                                 _i = sc.index(key)
                                 il = _i + len(key)
                                 ia = _i
                                 ila = il
-
                                 if n:
                                     ia += indexes[ii][n - 1][1]
                                     ila += indexes[ii][n - 1][1]
-
                                 indexes[ii].append((ia, ila))
-
                                 sc = sc[il:]
-
                                 n += 1
-
                         except ValueError:
                             pass
-
-                        ii += 1
 
                     hmaxes = [h1max, h2max, h3max]
                     print(f" \x1b[1;32m{str(i) + ' ' * (h0max - len(str(i)))}", end="")
@@ -342,11 +320,7 @@ class Main:
                                     print(f"\x1b[0m{row[_ie][ien[1]:]}{' '*(hmaxes[_ie]-len(row[_ie]))}", end="")
                         else:
                             print(f" \x1b[0m{row[_ie]}{' '*(hmaxes[_ie]-len(row[_ie]))}", end="")
-
-
                     print("")
-
-                i += 1
 
         else:
             print("\n\x1b[1;34mNo Records to Search!")
@@ -358,13 +332,11 @@ class Main:
         h3max = len("Password")
 
         data = self.curs.execute("select * from passwords").fetchall()
-        i = 1
-        for row in data:
+        for i, row in enumerate(data):
             h0max = len(str(i)) if len(str(i)) > h0max else h0max
             h1max = len(row[0]) if len(row[0]) > h1max else h1max
             h2max = len(row[1]) if len(row[1]) > h2max else h2max
             h3max = len(row[2]) if len(row[2]) > h3max else h3max
-            i += 1
 
         # headers
         print(f" \x1b[1;32m#{' ' * (h0max - len('#'))} \x1b[1;35m|"
@@ -373,14 +345,12 @@ class Main:
               f" \x1b[1;34mPassword{' ' * (h3max - len('Password'))}")
         # ---------------------------------+---------------------------------------+------------------------------------
         print(f"\x1b[1;35m-{'-' * h0max}-+-{'-' * h1max}-+-{'-' * h2max}-+-{'-' * h3max}-")
-        i = 1
         # rows
-        for row in data:
+        for i, row in enumerate(data):
             print(f" \x1b[1;32m{str(i) + ' ' * (h0max - len(str(i)))} \x1b[1;35m|"
                   f" \x1b[0m{row[0] + ' ' * (h1max - len(row[0]))} \x1b[1;35m|"
                   f" \x1b[0m{row[1] + ' ' * (h2max - len(row[1]))} \x1b[1;35m|"
                   f" \x1b[0m{row[2] + ' ' * (h3max - len(row[2]))}")
-            i += 1
 
         # No Records
         if not self.curs.execute("select count(*) from passwords").fetchone()[0]:
