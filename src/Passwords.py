@@ -4,17 +4,23 @@ import sqlite3
 import os
 import random
 from time import sleep
-import pathlib
 
 
-__version__ = "1.0.0dev"
+__version__ = "1.0.0"
 __author__ = "Todo Lodo"
 
 
 class Main:
     def __init__(self):
         self.chars = list(string.ascii_letters + string.digits + string.punctuation)
-        self.conn = sqlite3.connect(rf"{os.path.dirname(__file__) if __file__.endswith('.exe') else os.path.dirname(os.path.dirname(__file__))}\data\passwords.db")
+
+        dbFile = rf"{os.path.dirname(__file__) if __file__.endswith('.exe') else os.path.dirname(os.path.dirname(__file__))}\data\passwords.db"
+
+        if not os.path.exists(rf"{os.path.dirname(__file__) if __file__.endswith('.exe') else os.path.dirname(os.path.dirname(__file__))}\data\passwords.db"):
+            with open(dbFile, "x") as f:
+                pass
+
+        self.conn = sqlite3.connect(dbFile)
         self.curs = self.conn.cursor()
 
         self.curs.execute("create table if not exists passwords (reference char, username char, password char);")
