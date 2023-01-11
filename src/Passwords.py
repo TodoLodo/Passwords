@@ -4,6 +4,7 @@ import sqlite3
 import os
 import random
 from time import sleep
+import pathlib
 
 
 __version__ = "1.0.0dev"
@@ -13,7 +14,6 @@ __author__ = "Todo Lodo"
 class Main:
     def __init__(self):
         self.chars = list(string.ascii_letters + string.digits + string.punctuation)
-        print(rf"{os.path.dirname(__file__) if __file__.endswith('.exe') else os.path.dirname(os.path.dirname(__file__))}\data\passwords.db", os.path.abspath(__file__))
         self.conn = sqlite3.connect(rf"{os.path.dirname(__file__) if __file__.endswith('.exe') else os.path.dirname(os.path.dirname(__file__))}\data\passwords.db")
         self.curs = self.conn.cursor()
 
