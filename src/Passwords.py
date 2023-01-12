@@ -6,7 +6,7 @@ import random
 from time import sleep
 
 
-__version__ = "1.0.0"
+__version__ = "1.0.0-beta"
 __author__ = "Todo Lodo"
 
 
