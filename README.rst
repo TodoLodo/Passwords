@@ -21,7 +21,7 @@ previous releases or using git clone command in terminal as follows
 Initiation
 ==========
 
-In the root dir run the ``setup.bat as`` administrator and upon completion a ``Passwords.bat`` will appear in the root dir
+In the root dir run the ``setup.bat`` as administrator and upon completion a ``Passwords.bat`` will appear in the root dir
 
 Execution
 =========
