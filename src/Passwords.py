@@ -11,12 +11,12 @@ __author__ = "Todo Lodo"
 
 class Main:
     def __init__(self):
+        # chars
         self.chars = list(string.ascii_letters + string.digits + string.punctuation)
 
         dbFile = rf"{os.path.dirname(__file__) if __file__.endswith('.exe') else os.path.dirname(os.path.dirname(__file__))}\data\passwords.db"
 
-        if not os.path.exists(
-                rf"{os.path.dirname(__file__) if __file__.endswith('.exe') else os.path.dirname(os.path.dirname(__file__))}\data\passwords.db"):
+        if not os.path.exists(dbFile):
             with open(dbFile, "x") as f:
                 pass
 
@@ -64,7 +64,7 @@ class Main:
                                     "\n"
                                     "\x1b[1;35m> \x1b[1;32m")
                     if command == '1':
-                        self.storePass(password)
+                        self.storePass(password=password)
                     elif command == '0':
                         self.Exit()
                     elif command != 2:
@@ -103,7 +103,27 @@ class Main:
     def count(self):
         return self.curs.execute("select count(*) from passwords").fetchone()[0]
 
+    @property
+    def h0max(self):
+        return len(str(self.count))
+
+    @property
+    def h1max(self):
+        return self.__hmax("reference")
+
+    @property
+    def h2max(self):
+        return self.__hmax("username")
+
+    @property
+    def h3max(self):
+        return self.__hmax("password")
+
     # accessor methods
+
+    def __hmax(self, header):
+        return len(header) if not (n := self.curs.execute(f"select max(length({header})) from passwords").fetchone()[0]) or len(header) > n else n
+
     def getPass(self, index: int, rowId: bool = False):
         raw = self.curs.execute(f"SELECT *, rowid FROM passwords LIMIT 1 OFFSET {index - 1}").fetchone()
         data = raw[:-1]
@@ -133,9 +153,9 @@ class Main:
 
     def storePass(self, reference=None, username=None, password=None):
         self.curs.execute(f"""insert into passwords (reference, username, password) values (?, ?, ?);""",
-                          (input("\x1b[0;33mEnter reference (nickname): \x1b[1;32m") if not reference else reference,
-                           input("\x1b[0;33mEnter username: \x1b[1;32m") if not username else username,
-                           input("\x1b[0;33mEnter password to store: \x1b[1;32m") if not password else password))
+                          (reference := input("\x1b[0;33mEnter reference (nickname): \x1b[1;32m") if not reference else reference,
+                           username := input("\x1b[0;33mEnter username: \x1b[1;32m") if not username else username,
+                           password := input("\x1b[0;33mEnter password to store: \x1b[1;32m") if not password else password))
         self.conn.commit()
 
         print("\x1b[1;34mPassword stored successfully!\x1b[0m")
@@ -201,9 +221,7 @@ class Main:
             print("\n\x1b[1;34mNo Records to Modify!")
 
     def delPass(self):
-        count = self.curs.execute("select count(*) from passwords").fetchone()[0]
-
-        if count:
+        if self.count:
             self.showAllPass()
 
             rowIndexes = []
@@ -224,7 +242,7 @@ class Main:
                 elif len(command) > 0:
                     for val in command:
                         try:
-                            if (i := int(val)) not in range(1, count + 1):
+                            if (i := int(val)) not in range(1, self.count + 1):
                                 raise ValueError
                             elif i not in rowIndexes:
                                 rowIndexes.append(i)
@@ -258,8 +276,7 @@ class Main:
                     if command.lower() == 'y':
                         for n, i in enumerate(rowIndexes):
                             i -= n
-                            rowid = self.curs.execute(f"SELECT rowid FROM passwords LIMIT 1 OFFSET {i - 1}").fetchone()[
-                                0]
+                            rowid = self.curs.execute(f"SELECT rowid FROM passwords LIMIT 1 OFFSET {i - 1}").fetchone()[0]
                             self.curs.execute(f"delete from passwords where rowid = {rowid}")
                             self.conn.commit()
 
@@ -350,33 +367,25 @@ class Main:
             print("\n\x1b[1;34mNo Records to Search!")
 
     def showAllPass(self):
-        h0max = len("#")
-        h1max = len("Reference")
-        h2max = len("Username")
-        h3max = len("Password")
 
-        for i, row in enumerate(self.passwords):
-            h0max = len(str(i)) if len(str(i)) > h0max else h0max
-            h1max = len(row[0]) if len(row[0]) > h1max else h1max
-            h2max = len(row[1]) if len(row[1]) > h2max else h2max
-            h3max = len(row[2]) if len(row[2]) > h3max else h3max
+        print(self.h1max)
 
         # headers
-        print(f" \x1b[1;32m#{' ' * (h0max - len('#'))} \x1b[1;35m|"
-              f" \x1b[1;34mReference{' ' * (h1max - len('Reference'))} \x1b[1;35m|"
-              f" \x1b[1;34mUsername{' ' * (h2max - len('Username'))} \x1b[1;35m|"
-              f" \x1b[1;34mPassword{' ' * (h3max - len('Password'))}")
+        print(f" \x1b[1;32m#{' ' * (self.h0max - len('#'))} \x1b[1;35m|"
+              f" \x1b[1;34mReference{' ' * (self.h1max - len('Reference'))} \x1b[1;35m|"
+              f" \x1b[1;34mUsername{' ' * (self.h2max - len('Username'))} \x1b[1;35m|"
+              f" \x1b[1;34mPassword{' ' * (self.h3max - len('Password'))}")
         # ---------------------------------+---------------------------------------+------------------------------------
-        print(f"\x1b[1;35m-{'-' * h0max}-+-{'-' * h1max}-+-{'-' * h2max}-+-{'-' * h3max}-")
+        print(f"\x1b[1;35m-{'-' * self.h0max}-+-{'-' * self.h1max}-+-{'-' * self.h2max}-+-{'-' * self.h3max}-")
         # rows
         if self.count:  # Checks if records count is not 0
             for i, row in enumerate(self.passwords):
-                print(f" \x1b[1;32m{str(i + 1) + ' ' * (h0max - len(str(i)))} \x1b[1;35m|"
-                      f" \x1b[0m{row[0] + ' ' * (h1max - len(row[0]))} \x1b[1;35m|"
-                      f" \x1b[0m{row[1] + ' ' * (h2max - len(row[1]))} \x1b[1;35m|"
-                      f" \x1b[0m{row[2] + ' ' * (h3max - len(row[2]))}")
+                print(f" \x1b[1;32m{str(i + 1) + ' ' * (self.h0max - len(str(i)))} \x1b[1;35m|"
+                      f" \x1b[0m{row[0] + ' ' * (self.h1max - len(row[0]))} \x1b[1;35m|"
+                      f" \x1b[0m{row[1] + ' ' * (self.h2max - len(row[1]))} \x1b[1;35m|"
+                      f" \x1b[0m{row[2] + ' ' * (self.h3max - len(row[2]))}")
         else:  # No Records
-            totLength = h0max + h1max + h2max + h3max + 3
+            totLength = self.h0max + self.h1max + self.h2max + self.h3max + 3
             halfLength = int(totLength / 2)
             print(f"\x1b[0m {' ' * halfLength}NO RECORDS{' ' * (totLength - halfLength)} ")
 
@@ -390,6 +399,7 @@ class Main:
             self.conn.commit()
             print("\n\x1b[1;34mPasswords deleted successfully!\x1b[0m")
 
+    # None database related methods
     def info(self):
         s = f"Password script or application is based consoled based developed by {__author__} and current installed version is {__version__}"
         for c in s:
