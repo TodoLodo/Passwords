@@ -70,8 +70,7 @@ class Main:
                     elif command != 2:
                         self.invalidOption(command)
                 elif command == '2':
-                    password = input("\x1b[33mEnter password to store: \x1b[1;32m")
-                    self.storePass(password)
+                    self.storePass()
                 elif command == '3':
                     self.modPass()
                 elif command == '4':
@@ -104,6 +103,16 @@ class Main:
     def count(self):
         return self.curs.execute("select count(*) from passwords").fetchone()[0]
 
+    # accessor methods
+    def getPass(self, index: int, rowId: bool = False):
+        raw = self.curs.execute(f"SELECT *, rowid FROM passwords LIMIT 1 OFFSET {index - 1}").fetchone()
+        data = raw[:-1]
+        rowid = raw[-1]
+
+        del raw
+
+        return (data, rowid) if rowId else data
+
     def genPass(self, length):
         charDic = {}
         probs = [1] * len(self.chars)
@@ -122,37 +131,35 @@ class Main:
 
         return password, avgRep
 
-    def storePass(self, password):
-        reference = input("\x1b[0;33mEnter reference (nickname): \x1b[1;32m")
-        username = input("\x1b[0;33mEnter username: \x1b[1;32m")
+    def storePass(self, reference=None, username=None, password=None):
         self.curs.execute(f"""insert into passwords (reference, username, password) values (?, ?, ?);""",
-                          (reference, username, password))
+                          (input("\x1b[0;33mEnter reference (nickname): \x1b[1;32m") if not reference else reference,
+                           input("\x1b[0;33mEnter username: \x1b[1;32m") if not username else username,
+                           input("\x1b[0;33mEnter password to store: \x1b[1;32m") if not password else password))
         self.conn.commit()
 
         print("\x1b[1;34mPassword stored successfully!\x1b[0m")
 
     def modPass(self):
-        count = self.curs.execute("select count(*) from passwords").fetchone()[0]
-
-        if count:
+        if self.count:
             self.showAllPass()
 
             while True:
                 command = input(
-                    "\n\x1b[0;33mSelect index to modify or (\x1b[1;35m[\x1b[1;32m-1\x1b[1;35m]\x1b[0m Back to main-menu\x1b[0;33m, \x1b[1;35m[\x1b[1;32m0\x1b[1;35m]\x1b[0m \x1b[31mExit\x1b[0;33m): \x1b[1;32m")
+                    "\n\x1b[0;33mSelect index to modify or ("
+                    "\x1b[1;35m[\x1b[1;32m-1\x1b[1;35m]\x1b[0m Back to main-menu\x1b[0;33m, "
+                    "\x1b[1;35m[\x1b[1;32m0\x1b[1;35m]\x1b[0m \x1b[31mExit\x1b[0;33m"
+                    "): \x1b[1;32m")
                 try:
-                    if (r := int(command)) in range(1, count + 1):
-                        data = self.curs.execute(f"SELECT *, rowid FROM passwords LIMIT 1 OFFSET {r - 1}").fetchone()
-                        oldRow = data[:-1]
-                        rowid = data[-1]
+                    if (r := int(command)) in range(1, self.count + 1):
+                        oldRow, rowid = self.getPass(index=r, rowId=True)
 
-                        reference = input("\x1b[0;33mEnter reference (leave space for same value): \x1b[1;32m")
-                        username = input("\x1b[0;33mEnter username (leave space for same value): \x1b[1;32m")
-                        password = input("\x1b[0;33mEnter password (leave space for same value): \x1b[1;32m")
-
+                        # new row
                         newRow = (
-                        reference if reference != '' else oldRow[0], username if username != '' else oldRow[1],
-                        password if password != '' else oldRow[2])
+                            ref if (ref := input("\x1b[0;33mEnter reference (leave space for same value): \x1b[1;32m")) else oldRow[0],
+                            usr if (usr := input("\x1b[0;33mEnter username (leave space for same value): \x1b[1;32m")) else oldRow[1],
+                            pwd if (pwd := input("\x1b[0;33mEnter password (leave space for same value): \x1b[1;32m")) else oldRow[2]
+                        )
 
                         data = [oldRow, newRow]
 
@@ -165,7 +172,7 @@ class Main:
                             h2max = len(row[1]) if len(row[1]) > h2max else h2max
                             h3max = len(row[2]) if len(row[2]) > h3max else h3max
 
-                        diff = [oldRow[0] == newRow[0], oldRow[1] == newRow[1], oldRow[2] == newRow[2]]
+                        diff = (oldRow[0] == newRow[0], oldRow[1] == newRow[1], oldRow[2] == newRow[2])
 
                         print(
                             f"\n \x1b[1;34mInstance{' ' * (h0max - len('Instance'))} \x1b[1;35m| \x1b[1;34mReference{' ' * (h1max - len('Reference'))} \x1b[1;35m| \x1b[1;34mUsername{' ' * (h2max - len('Username'))} \x1b[1;35m| \x1b[1;34mPassword{' ' * (h3max - len('Password'))}")
@@ -364,7 +371,7 @@ class Main:
         # rows
         if self.count:  # Checks if records count is not 0
             for i, row in enumerate(self.passwords):
-                print(f" \x1b[1;32m{str(i) + ' ' * (h0max - len(str(i)))} \x1b[1;35m|"
+                print(f" \x1b[1;32m{str(i + 1) + ' ' * (h0max - len(str(i)))} \x1b[1;35m|"
                       f" \x1b[0m{row[0] + ' ' * (h1max - len(row[0]))} \x1b[1;35m|"
                       f" \x1b[0m{row[1] + ' ' * (h2max - len(row[1]))} \x1b[1;35m|"
                       f" \x1b[0m{row[2] + ' ' * (h3max - len(row[2]))}")
